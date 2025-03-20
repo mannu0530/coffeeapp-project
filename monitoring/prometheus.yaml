@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+    env: devops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus
+      initContainers:
+        - name: volume-permissions
+          image: busybox
+          command: ["sh", "-c", "chmod -R 777 /prometheus"]
+          volumeMounts:
+            - mountPath: /prometheus
+              name: prometheus-storage
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - mountPath: /prometheus
+              name: prometheus-storage
+            - mountPath: /etc/prometheus/rules
+              name: prometheus-storage
+            - mountPath: /etc/prometheus
+              name: prometheus-config-volume
+      volumes:
+        - name: prometheus-storage
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+        - name: prometheus-config-volume
+          configMap:
+            name: prometheus-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: prometheus-service
+ namespace: monitoring
+ labels:
+    app: prometheus-service
+    env: devops
+spec:
+ selector:
+   app: prometheus
+ ports:
+   - protocol: TCP
+     port: 80
+     targetPort: 9090
+ type: ClusterIP

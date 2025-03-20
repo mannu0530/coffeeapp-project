@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k8s-prometheus-ingress
+  namespace: monitoring
+  annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: clusterissuer-coffeeapp
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: prometheus.kubesimplify.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - prometheus.kubesimplify.xyz
+    secretName: coffeeapp-app
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k8s-grafana-ingress
+  namespace: monitoring
+  annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: clusterissuer-coffeeapp
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: grafana.kubesimplify.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - grafana.kubesimplify.xyz
+    secretName: coffeeapp-app

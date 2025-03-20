@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+ name: inventory-spring-boot-app-service-monitor
+ namespace: monitoring
+ annotations:
+    meta.helm.sh/release-name: my-kube-prometheus-stack
+    meta.helm.sh/release-namespace: monitoring
+ labels:
+    app: prometheus
+    env: devops
+spec:
+  selector:
+    matchLabels:
+      app: inventory-service
+  namespaceSelector:
+    matchNames:
+    - dev
+  endpoints:
+    - port: http
+      path: /actuator/prometheus

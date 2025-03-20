@@ -1,0 +1,85 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gce-standard
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard  # or 'pd-ssd' for SSDs
+  fsType: ext4
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv
+  namespace: monitoring
+  labels:
+    app: prometheus
+    env: devops
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: gce-standard
+  gcePersistentDisk:
+    pdName: prometheus-pv
+    fsType: ext4  # Let GKE handle disk creation automatically
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: monitoring
+  labels:
+    app: prometheus
+    env: devops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gce-standard
+
+--- 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-pv
+  namespace: monitoring
+  labels:
+    app: grafana
+    env: devops
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: gce-standard
+  gcePersistentDisk:
+    pdName: grafana-pv
+    fsType: ext4  # Let GKE handle disk creation automatically
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: monitoring
+  labels:
+    app: grafana
+    env: devops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gce-standard

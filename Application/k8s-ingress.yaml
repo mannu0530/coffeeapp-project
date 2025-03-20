@@ -1,0 +1,54 @@
+# https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k8s-ingress-inventory
+  namespace: dev
+  annotations:
+    #nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: clusterissuer-coffeeapp
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: inventory.kubesimplify.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: inventory-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - inventory.kubesimplify.xyz
+    secretName: coffeeapp-app
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: k8s-ingress-inventory
+  namespace: dev
+  annotations:
+    #nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: clusterissuer-coffeeapp
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: kubesimplify.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+         service:
+            name: order-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - kubesimplify.xyz
+    secretName: coffeeapp-app
