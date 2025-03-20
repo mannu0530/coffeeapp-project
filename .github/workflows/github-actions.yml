@@ -1,0 +1,133 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Or any other branch you want to trigger the workflow on
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.set_version.outputs.new_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Retrieve and increment version
+        id: set_version
+        run: |
+          VERSION_FILE="version.txt"
+          if [ ! -f $VERSION_FILE ]; then
+            echo "v0.1" > $VERSION_FILE  # If version file does not exist, start from v0.1
+          fi
+          VERSION=$(cat $VERSION_FILE)
+          echo "Current version: $VERSION"
+          # Increment version (e.g., v0.1 -> v0.2)
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF++; print}')
+          echo "New version: $NEW_VERSION"
+          echo $NEW_VERSION > $VERSION_FILE  # Update version in version.txt
+          echo "::set-output name=new_version::$NEW_VERSION"  # Set output to be used in later jobs
+          
+      - name: Upload version file
+        uses: actions/upload-artifact@v2
+        with:
+          name: version-file
+          path: version.txt
+
+  docker_build_and_push_inventory:
+    runs-on: ubuntu-latest
+    needs: versioning  # This job depends on the versioning job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Inventory Service Docker Image
+        run: |
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          echo "Docker tag set to $VERSION"
+          cd inventory-service
+          docker build -t $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION .
+          docker push $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION
+
+  docker_build_and_push_order:
+    runs-on: ubuntu-latest
+    needs: versioning  # This job depends on the versioning job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Order Service Docker Image
+        run: |
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          echo "Docker tag set to $VERSION"
+          cd order-service
+          docker build -t $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION .
+          docker push $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION
+
+  update_k8s_deployment:
+    runs-on: ubuntu-latest
+    needs: versioning  # This job depends on the versioning job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Update Kubernetes Deployment YAML files
+        run: |
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          cd Application
+          echo "Updating Kubernetes deployment files with new Docker image tags"
+          sed "s|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION|" $INVENTORY_APPLICATION_DEPLOYMENT_FILE > temp_inventory.yaml && mv temp_inventory.yaml $INVENTORY_APPLICATION_DEPLOYMENT_FILE
+          sed "s|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION|" $ORDER_APPLICATION_DEPLOYMENT_FILE > temp_order.yaml && mv temp_order.yaml $ORDER_APPLICATION_DEPLOYMENT_FILE
+          cat $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE
+          git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE
+          git commit -m "update docker version in deployment files"
+          git push origin main
+
+  code_push:
+    runs-on: ubuntu-latest
+    needs: versioning  # This job depends on the versioning job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+        
+      - name: Commit and Push Code Changes
+        run: |
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          git remote set-url origin "https://rs223483:${{ secrets.GITLAB_TOKEN }}@gitlab.com/rs223483/coffeeapp-project.git"
+          git status
+          git add .
+          git diff --cached --exit-code || git commit -m "Update version to $VERSION"
+          git push origin main
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: always()  # Ensure this always runs after the jobs
+    steps:
+      - name: Remove Docker images
+        run: |
+          docker rmi $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION || true
+          docker rmi $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION || true
