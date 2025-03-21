@@ -23,7 +23,6 @@ FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # Copy the JAR file from the build stage
-# formal comment
 COPY --from=build /app/target/*.jar /inventory-service.jar
 
 # Expose the port that your app will run on (if necessary)
