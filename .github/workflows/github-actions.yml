@@ -5,6 +5,12 @@ on:
     branches:
       - main  # Or any other branch you want to trigger the workflow on
 
+env:
+  DOCKER_REGISTRY: "docker.io"
+  DOCKER_INVENTORY_IMAGE_NAME: mkbiloniya/inventory-service
+  DOCKER_ORDER_IMAGE_NAME: mkbiloniya/order-service
+
+
 jobs:
   versioning:
     runs-on: ubuntu-latest
