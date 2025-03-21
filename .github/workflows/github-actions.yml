@@ -108,34 +108,38 @@ jobs:
           sed "s|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION|" $INVENTORY_APPLICATION_DEPLOYMENT_FILE > /tmp/temp_inventory.yaml && mv /tmp/temp_inventory.yaml $INVENTORY_APPLICATION_DEPLOYMENT_FILE
           sed "s|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION|" $ORDER_APPLICATION_DEPLOYMENT_FILE > /tmp/temp_order.yaml && mv /tmp/temp_order.yaml $ORDER_APPLICATION_DEPLOYMENT_FILE
           cat $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE 
+      - name: Set up Git
+        run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE 
+      - name: Commit and Push Code Changes
+        run: |
+          git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE version.txt
           git commit -m "update docker version in deployment files"
           git push https://github.com/mannu0530/coffeeapp-project.git HEAD:${{ github.ref }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  code_push:
-    runs-on: ubuntu-latest
-    needs: versioning  # This job depends on the versioning job
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # code_push:
+  #   runs-on: ubuntu-latest
+  #   needs: versioning  # This job depends on the versioning job
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Set up Git
-        run: |
-          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+  #     - name: Set up Git
+  #       run: |
+  #         git config --global user.name "${{ secrets.GIT_USER_NAME }}"
+  #         git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
         
-      - name: Commit and Push Code Changes
-        run: |
-          VERSION=${{ needs.versioning.outputs.new_version }}
-          git remote set-url origin "https://rs223483:${{ secrets.GITLAB_TOKEN }}@gitlab.com/rs223483/coffeeapp-project.git"
-          git status
-          git add .
-          git diff --cached --exit-code || git commit -m "Update version to $VERSION"
-          git push origin main
+  #     - name: Commit and Push Code Changes
+  #       run: |
+  #         VERSION=${{ needs.versioning.outputs.new_version }}
+  #         git remote set-url origin "https://rs223483:${{ secrets.GITLAB_TOKEN }}@gitlab.com/rs223483/coffeeapp-project.git"
+  #         git status
+  #         git add .
+  #         git diff --cached --exit-code || git commit -m "Update version to $VERSION"
+  #         git push origin main
 
   cleanup:
     runs-on: ubuntu-latest
