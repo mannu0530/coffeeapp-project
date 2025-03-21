@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: docker.io/mkbiloniya/inventory-service:v4
+        image: docker.io/mkbiloniya/inventory-service:v0.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8082
