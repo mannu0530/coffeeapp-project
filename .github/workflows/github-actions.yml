@@ -9,6 +9,9 @@ env:
   DOCKER_REGISTRY: "docker.io"
   DOCKER_INVENTORY_IMAGE_NAME: mkbiloniya/inventory-service
   DOCKER_ORDER_IMAGE_NAME: mkbiloniya/order-service
+  INVENTORY_APPLICATION_DEPLOYMENT_FILE: Application/inventory-app.yaml
+  ORDER_APPLICATION_DEPLOYMENT_FILE: Application/order-app.yaml
+
 
 
 jobs:
