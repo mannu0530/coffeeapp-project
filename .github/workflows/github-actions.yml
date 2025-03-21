@@ -111,10 +111,9 @@ jobs:
           echo $VERSION > ../version.txt
           git config --global user.name "github-actions"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git status
-          # git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE version.txt
-          # git commit -m "update docker version in deployment files"
-          # git push https://github.com/mannu0530/coffeeapp-project.git HEAD:${{ github.ref }}
+          git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE ../version.txt
+          git commit -m "update docker version in deployment files"
+          git push https://github.com/mannu0530/coffeeapp-project.git HEAD:${{ github.ref }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
