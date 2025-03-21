@@ -112,7 +112,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE 
           git commit -m "update docker version in deployment files"
-          git push https://github.com/coffeeapp-project HEAD:${{ github.ref }}
+          git push https://github.com/mannu0530/coffeeapp-project.git HEAD:${{ github.ref }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
