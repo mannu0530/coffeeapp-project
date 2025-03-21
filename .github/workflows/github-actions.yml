@@ -37,7 +37,7 @@ jobs:
 
   docker_build_and_push_inventory:
     runs-on: ubuntu-latest
-    needs: versioning  # This job depends on the versioning job
+    needs: versioning  # This job depends on the versioning 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
