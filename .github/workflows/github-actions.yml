@@ -105,9 +105,11 @@ jobs:
           cd Application
           pwd
           echo "Updating Kubernetes deployment files with new Docker image tags"
-          sed "s|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION|" $INVENTORY_APPLICATION_DEPLOYMENT_FILE
-          sed "s|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION|" $ORDER_APPLICATION_DEPLOYMENT_FILE 
+          sed "s|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_INVENTORY_IMAGE_NAME:$VERSION|" $INVENTORY_APPLICATION_DEPLOYMENT_FILE > /tmp/temp_inventory.yaml && mv /tmp/temp_inventory.yaml $INVENTORY_APPLICATION_DEPLOYMENT_FILE
+          sed "s|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:.*|image: $DOCKER_REGISTRY/$DOCKER_ORDER_IMAGE_NAME:$VERSION|" $ORDER_APPLICATION_DEPLOYMENT_FILE > /tmp/temp_order.yaml && mv /tmp/temp_order.yaml $ORDER_APPLICATION_DEPLOYMENT_FILE
           cat $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE 
+          git config --global user.name "mannu0530"
+          git config --global user.email "maheshbiloniya@gmail.com"
           git add $INVENTORY_APPLICATION_DEPLOYMENT_FILE $ORDER_APPLICATION_DEPLOYMENT_FILE
           git commit -m "update docker version in deployment files"
           git push origin main
