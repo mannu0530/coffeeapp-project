@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: docker.io/mkbiloniya/order-service:v0.3
+        image: docker.io/mkbiloniya/order-service:v0.4
         imagePullPolicy: Always
         env:
         - name: INVENTORY_URL
